@@ -28,7 +28,7 @@ proc processLine(line: string) =
   #   echo v
   # echo "\n"  
 
-var input = readFile(getCurrentDir() & "/src/day1/input.txt")
+var input = readFile(currentSourcePath.parentDir() & "/input.txt")
 
 for line in input.split("\n"):
   processLine(line)
