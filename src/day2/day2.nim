@@ -26,6 +26,24 @@ proc resolve(g1: Gesture, g2: Gesture): Outcome =
     of Paper: result = Loss
     of Scissors: result = Draw
 
+proc resolve(g: Gesture, o: Outcome): Gesture =
+  case g
+  of Rock:
+    case o
+    of Draw: result = Rock
+    of Win: result = Paper
+    of Loss: result = Scissors
+  of Paper:
+    case o
+    of Loss: result = Rock
+    of Draw: result = Paper
+    of Win: result = Scissors
+  of Scissors:
+    case o
+    of Win: result = Rock
+    of Loss: result = Paper
+    of Draw: result = Scissors
+
 proc getGesture(c: char): Gesture =
   case c
   of 'A','X': Rock
@@ -33,14 +51,30 @@ proc getGesture(c: char): Gesture =
   of 'C','Z': Scissors
   else: echo "Bad input. Exiting."; quit()
 
-proc runRound(line: string): int =
+proc getOutcome(c: char): Outcome =
+  case c
+  of 'X': Loss
+  of 'Y': Draw
+  of 'Z': Win
+  else: echo "Bad input. Exiting."; quit()
+
+proc runPart1Round(line: string): int =
   var g1: Gesture = getGesture(line[0])
   var g2: Gesture = getGesture(line[2])
   ord(resolve(g1, g2)) + ord(g2)
+  
+proc runPart2Round(line: string): int =
+  var g1: Gesture = getGesture(line[0])
+  var o: Outcome = getOutcome(line[2])
+  ord(resolve(g1, o)) + ord(o)
 
-proc runGame(filename: string): int =
+proc runGame(filename: string): (int, int) =
+  result = (0,0)
   for line in filename.lines:
-    result += runRound(line)
+    result[0] += runPart1Round(line)
+    result[1] += runPart2Round(line)
 
 var filename = currentSourcePath.parentDir() & "/input.txt"
-echo "My score: ", runGame(filename)
+var results = runGame(filename)
+echo "Part 1 score: ", results[0]
+echo "Part 2 score: ", results[1] 
