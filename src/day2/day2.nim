@@ -1,5 +1,4 @@
 import std/os
-import std/strutils
 
 type
   Gesture = enum
