@@ -18,11 +18,21 @@ proc findMatch[T](a: openArray[T], b: openArray[T]): T =
     if a[i] == b[j]: return a[i]
   raise
 
+proc findMatch[T](a: openArray[T], b: openArray[T], c: openArray[T]): T =
+  var j, k: int
+  for i in 0 ..< len(a):
+    while b[j] < a[i]:
+      inc(j)
+    while c[k] < a[i]:
+      inc(k)
+    if a[i] == b[j] and a[i] == c[k]: return a[i]
+  raise
+
 proc dedup_sort(s: var seq[char]) =
   let new_len = dedup_selection_sort(s)
   if new_len < len(s): s.delete(new_len ..< len(s))
 
-proc solve(filename: string): int =
+proc solvePart1(filename: string): int =
   for line in filename.lines:
     # echo line
     let mid = len(line) div 2
@@ -34,6 +44,18 @@ proc solve(filename: string): int =
     # echo "match: ", match
     result += itemValue(match)
 
+proc solvePart2(filename: string): int =
+  var f = filename.open()
+  while not f.endOfFile():
+    var line1 = cast[seq[char]](f.readLine())
+    var line2 = cast[seq[char]](f.readLine())
+    var line3 = cast[seq[char]](f.readLine())
+    dedup_sort(line1)
+    dedup_sort(line2)
+    dedup_sort(line3)
+    result += itemValue(findMatch(line1, line2, line3))
+    
 
 var filename = currentSourcePath.parentDir() & "/input.txt"
-echo solve(filename)
+echo "Part 1: ", solvePart1(filename)
+echo "Part 2: ", solvePart2(filename)
