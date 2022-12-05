@@ -2,10 +2,15 @@
 
 https://adventofcode.com/
 
-To start, [install nim](https://nim-lang.org/install.html).
+I try to push solutions after submitting my answer. My goals are
+1. Learn some nim
+2. Maybe sometimes attempt a mildly interesting (if inefficient) algorithm
 
-Run day 1 code:
+## Run it
+First, [install nim](https://nim-lang.org/install.html).
+
+Run day X code:
 
 ```sh
-./run.sh 1
+./run.sh X
 ```
