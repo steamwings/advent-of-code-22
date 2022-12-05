@@ -45,14 +45,26 @@ proc getTops(stacks: seq[seq[char]]): string =
   # Not sure why this doesn't work
   # return foldl(stacks, a.add(b[^1]), "")
 
+proc mover9000(inst: Instruction, stacks: var seq[seq[char]]) =
+  for i in 0 ..< inst.count:
+    stacks[inst.dest].add(stacks[inst.source][^1])
+    stacks[inst.source].delete(len(stacks[inst.source]) - 1)
+
+proc mover9001(inst: Instruction, stacks: var seq[seq[char]]) =
+  var source_end = len(stacks[inst.source]) - 1
+  for i in countdown(inst.count,1):
+    stacks[inst.dest].add(stacks[inst.source][^i])
+  # I'm not proud of the choices I've made
+  for i in 0 ..< inst.count:
+    stacks[inst.source].delete(len(stacks[inst.source]) - 1)
+
 proc getTopsAtEnd(file: File, stacks: var seq[seq[char]]): string =
   discard file.readLine() # Blank line
   while not file.endOfFile():
     #echo getTops(stacks)
     var inst = getInstr(file)
-    for i in 0 ..< inst.count:
-      stacks[inst.dest].add(stacks[inst.source][^1])
-      stacks[inst.source].delete(len(stacks[inst.source]) - 1)
+    # mover9000(inst, stacks) # PART 1
+    mover9001(inst, stacks) # PART 2
   file.close()
   getTops(stacks)
 
@@ -63,5 +75,4 @@ proc solve(filename: string): string =
 
 let filename = currentSourcePath.parentDir() & "/input.txt"
 let result = solve(filename)
-echo "Part 1: ", result # [0]
-# echo "Part 2: ", result[1]
+echo result
