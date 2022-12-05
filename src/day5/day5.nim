@@ -51,7 +51,6 @@ proc mover9000(inst: Instruction, stacks: var seq[seq[char]]) =
     stacks[inst.source].delete(len(stacks[inst.source]) - 1)
 
 proc mover9001(inst: Instruction, stacks: var seq[seq[char]]) =
-  var source_end = len(stacks[inst.source]) - 1
   for i in countdown(inst.count,1):
     stacks[inst.dest].add(stacks[inst.source][^i])
   # I'm not proud of the choices I've made
