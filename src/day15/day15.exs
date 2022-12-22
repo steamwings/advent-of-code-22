@@ -19,7 +19,6 @@ defmodule Main do
 
   # just for debug
   def print_row() do
-    #:ets.foldl(fn {i, v}, acc -> ["#{i},#{v} " | acc] end, [], pid_atom())
     :ets.foldl(fn {i, v}, acc -> [[i,v] | acc] end, [], pid_atom())
     |> Enum.sort(fn ([a,_], [c,_]) -> a < c end)
     |> Enum.map(fn [i,v] -> "#{i},#{v} " end)
@@ -73,7 +72,6 @@ defmodule Main do
     data
     |> Stream.map(&process_line(&1, row_index))
     |> Enum.to_list()
-    IO.write(".")
   end
 
   def runPart1(contents, row_index) do
@@ -88,6 +86,7 @@ defmodule Main do
     x*4000000 + y
   end
 
+  # Add the "radius" distance with each signal position
   def with_radius(line) do
     [[xs, ys], [xb, yb]] = line
     radius = manhattan_distance({xs, ys}, {xb, yb})
@@ -99,25 +98,48 @@ defmodule Main do
     manhattan_distance({xz, yz}, point) <= radius
   end
 
-  def find_point({x,y}, zones, max) do
-    case Enum.any?(zones, fn zone -> is_in_zone(zone, {x,y}) end) do
-      false -> {x,y}
-      _ when y == max and x == max -> IO.puts "FAIL"
-      _ when y == max -> IO.write("."); find_point({x+1,0}, zones, max)
-      _ -> find_point({x,y+1}, zones, max)
-    end
+  # Get the points in the perimeter around a zone (unless it's outside of the overall boundaries)
+  def perimeter({xz, yz, radius}, maximum) do
+    Enum.reduce(max(-radius-1, 0)..min(radius+1, maximum), [], fn dy, acc ->
+      dx = radius + 1 - abs(dy)
+      y = yz + dy
+      cond do
+        y < 0 or y > maximum -> acc
+        dx == 0 -> [{xz, y} | acc]
+        true ->
+          x1 = xz - dx
+          x2 = dx - xz
+          acc2 = cond do
+            x1 >= 0 and x1 <= maximum -> [{x1, y} | acc]
+            true -> acc
+          end
+          cond do
+            x2 >= 0 and x2 <= maximum -> [{x2, y} | acc2]
+            true -> acc2
+          end
+      end
+    end)
   end
 
-  # I estimate this will take about 2000 hours to finish on my present VM, should probably do better...
   def runPart2(contents, max) do
     zones = Enum.map(contents, &with_radius/1)
-    freq = tuning_frequency(find_point({0,0}, zones, max))
-    IO.puts "Part 2: frequency #{freq}"
+
+    Enum.map(zones, fn z -> perimeter(z, max) end)
+    |> tap(fn _ -> IO.puts "Zones generated. Starting preprocessing..." end)
+    |> Enum.concat
+    |> Enum.uniq # This is costly but probably worth doing?
+    |> tap(fn _ -> IO.puts "Starting find..." end)
+    |> Enum.find(:FAIL, fn point -> !Enum.any?(zones, fn zone -> is_in_zone(zone, point) end) end)
+    |> case do
+      :FAIL -> "Point not found :("
+      point -> {x,y} = point; "Part 2: (#{x},#{y}) frequency #{tuning_frequency(point)}"
+    end
+    |> IO.puts
   end
 
   def run(filename, pt1_target_row, pt2_max) do
     contents = parse(filename)
-    #runPart1(contents, pt1_target_row)
+    runPart1(contents, pt1_target_row)
     runPart2(contents, pt2_max)
   end
 end
