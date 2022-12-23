@@ -27,6 +27,12 @@ defmodule Main do
     end)
   end
 
+  # for debug
+  defp print_points(points) do
+    Enum.reduce(points, "", fn {x,y}, acc -> acc <> "(#{x},#{y}), " end)
+    |> IO.puts
+  end
+
   defp next_tail({xh, yh}, {xt, yt}) do
     dx = xh - xt
     dy = yh - yt
@@ -35,22 +41,35 @@ defmodule Main do
     #IO.puts "dx: #{dx}, dy: #{dy}, adx: #{adx}, ady: #{ady}"
     cond do
       adx < 2 and ady < 2 -> {xt, yt} # no move
-      adx + ady == 2 -> set({xt + div(dx,2), yt + div(dy,2)}) # vert/horiz move
-      adx == 2 -> set({xt + div(dx,2), yt + dy}) # diagonal
-      ady == 2 -> set({xt + dx, yt + div(dy,2)}) # diagonal
+      adx + ady == 2 or (adx == 2 and ady == 2) ->
+        {xt + div(dx,2), yt + div(dy,2)} # vert/horiz move or double diag
+      adx == 2 -> {xt + div(dx,2), yt + dy} # diagonal
+      ady == 2 -> {xt + dx, yt + div(dy,2)} # diagonal
+      true -> # panic
+        print_points([{xh, yh}, {xt, yt}])
+        IO.puts "dx: #{dx}, dy: #{dy}, adx: #{adx}, ady: #{ady}"
+        exit(1)
     end
   end
 
-  defp next_move(direction, {{x_head, y_head}, tail_pos}) do
+  defp move_tails(head, [tail | tails]) when tails == [] do
+    [head | [set(next_tail(head, tail))]]
+  end
+
+  defp move_tails(head, [tail | tails]) do
+    [head | move_tails(next_tail(head, tail), tails)]
+  end
+
+  defp next_move(direction, [{x_head, y_head} | tails]) do
     new_head = case direction do
       "U" -> {x_head, y_head + 1}
       "D" -> {x_head, y_head - 1}
       "R" -> {x_head + 1, y_head}
       "L" -> {x_head - 1, y_head}
     end
-    new_tail = next_tail(new_head, tail_pos)
-    #[new_head, new_tail] |> (fn [{x1,y1},{x2,y2}] -> IO.puts "head: (#{x1},#{y1}), tail: (#{x2},#{y2})" end).()
-    {new_head, new_tail}
+
+    move_tails(new_head, tails)
+      #|> tap(&print_points/1) # Uncomment to see each movement
   end
 
   defp next_line({direction, count}, coordinates) when count == 1 do
@@ -61,10 +80,11 @@ defmodule Main do
     next_line({direction, count - 1}, next_move(direction, coordinates))
   end
 
-  defp run_p1(stream) do
+  defp run_for_knots(stream, knots) do
     :ets.new(pid_atom(), [:named_table])
     set({0,0})
-    Enum.reduce(stream, {{0,0}, {0,0}}, &next_line(&1,&2))
+    init_acc = for _ <- 1..knots, do: {0,0}
+    Enum.reduce(stream, init_acc, &next_line(&1,&2))
     count = count()
     :ets.delete(pid_atom())
     count
@@ -72,7 +92,8 @@ defmodule Main do
 
   def run(file) do
     stream = parse(file)
-    IO.puts "Part 1: #{run_p1(stream)}"
+    IO.puts "Part 1: #{run_for_knots(stream, 2)}"
+    IO.puts "Part 2: #{run_for_knots(stream, 10)}"
   end
 end
 
