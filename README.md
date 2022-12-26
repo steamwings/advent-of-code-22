@@ -24,4 +24,5 @@ This was a bit more complicated than installing nim, so here were my steps:
 - `sudo apt install libncurses5-dev automake autoconf`: You may not need this. I needed this for the next step to work. (I'm using Ubuntu 20.04 WSL.)
 - `asdf install erlang 25.1.2`
 - `asdf install elixir 1.14.1-otp-25`
-- Added the .tool-versions file to this repo for `asdf`
+
+I also added the .tool-versions file to this repo for `asdf`.
