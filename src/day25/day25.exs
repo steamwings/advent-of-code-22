@@ -61,13 +61,72 @@ defmodule Main do
     |> String.trim_leading("0")
   end
 
-  # NOTE: A better strategy is probably just to add the snafu numbers
-  # and never convert at all. I may implement this later...
   def part1(stream) do
     stream
     |> Stream.map(&snafu_to_decimal(&1))
     |> Enum.reduce(fn x, sum -> x + sum end)
     |> decimal_to_snafu
+    |> IO.puts
+  end
+
+  defp decimal_digit(snafu_digit_ascii) do
+    case snafu_digit_ascii do
+      ?= -> -2
+      ?- -> -1
+      _ -> snafu_digit_ascii - ?0
+    end
+  end
+
+  # single digits only
+  defp _snafu_add(x,y,z) do
+    [x,y,z]
+    |> Enum.map(&decimal_digit(&1))
+    #|> Enum.map(&tap(&1, fn x -> IO.puts(x) end))
+    |> Enum.reduce(&(&1 + &2))
+    |> case do
+      -6 -> "--"
+      -5 -> "-0"
+      -4 -> "-1"
+      -3 -> "-2"
+      -2 -> "0="
+      -1 -> "0-"
+      0 -> "00"
+      1 -> "01"
+      2 -> "02"
+      3 -> "1="
+      4 -> "1-"
+      5 -> "10"
+      6 -> "11"
+    end
+  end
+
+  defp _snafu_add(x, y) do
+    #IO.puts "x: #{x}, y: #{y}"
+    case x do # x and y should have equal length
+      <<x1>> ->
+        <<y1>> = y
+        _snafu_add(x1,y1,?0)
+      <<x1, xrest::binary>> ->
+        <<y1, yrest::binary>> = y
+        <<z, rest::binary>> = _snafu_add(xrest, yrest)
+        _snafu_add(x1,y1,z) <> rest
+    end
+  end
+
+  def snafu_add(x, y) do
+    lx = String.length(x)
+    ly = String.length(y)
+    len_result = max(lx,ly) + 1
+    _snafu_add(
+      String.pad_leading(x, len_result, ["0"]),
+      String.pad_leading(y, len_result, ["0"])
+    )
+    |> String.trim_leading("0")
+  end
+
+  def part1_alt(stream) do
+    stream
+    |> Enum.reduce(fn x, sum -> snafu_add(x,sum) end)
     |> IO.puts
   end
 
@@ -80,11 +139,20 @@ defmodule Main do
     # snafu_to_decimal("1=11-2")
     # |> IO.puts
 
+    # snafu_to_decimal("20-0=1-=2=")
+    # |> IO.puts
+
     # decimal_to_snafu(2022)
     # |> IO.puts
 
-    part1(contents)
+    # answer: 20-0--0-10
+    # snafu_add("1=11-2", "20-0=1-=2=")
+    # |> IO.puts
+
+    # Actually run it
+    #part1(contents) # Convert to quintary, sum, convert back
+    part1_alt(contents) # Do sum with snafu numbers directly
   end
 end
 
-Main.run("src/day25/input.txt")
+Main.run("src/day25/example.txt")
